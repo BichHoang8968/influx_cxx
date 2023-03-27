@@ -24,6 +24,7 @@
 #include <rapidjson/reader.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
 #include "Query.h"
 #include "InfluxDBParams.h"
 
@@ -64,7 +65,7 @@ namespace influxdb::internal
         }
 
         /// parse InfluxQL JSON response
-        std::vector<InfluxDBTable> parseJsonResponse(std::string response)
+        std::vector<InfluxDBTable> parseJsonResponse(const std::string &response)
         {
             std::vector<InfluxDBTable> resultSet;
             rapidjson::Document responseDoc;
@@ -199,7 +200,7 @@ namespace influxdb::internal
         rapidjson::Document js;
         std::string errMsg = {};
         if (js.Parse(buffer.c_str()).HasParseError())
-            throw InfluxDBException("Query", "Parse json error" + js.GetParseError());
+            throw InfluxDBException("Query", "Parse json error: " + std::string(rapidjson::GetParseError_En(js.GetParseError())));
 
         if (!js.IsObject())
             throw InfluxDBException("Query", "Unsupported json structure");

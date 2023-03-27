@@ -32,6 +32,7 @@
 #include <memory>
 #include <sstream>
 #include <iomanip>
+#include <stdio.h>
 
 namespace influxdb
 {
@@ -171,29 +172,28 @@ std::chrono::time_point<std::chrono::system_clock> Point::getTimestamp() const
 
 std::string Point::getFields() const
 {
-  std::string fields;
+  std::string fields = "";
 
   for (const auto& field : mFields)
   {
-    std::stringstream convert;
-    convert << std::setprecision(floatsPrecision);
-
     if (!fields.empty())
     {
-        convert << ",";
+      fields += ",";
     }
 
-    convert << escapeKey(field.first) << "=";
+    fields += escapeKey(field.first) + "=";
     std::visit(overloaded {
-      [&convert](bool v) { convert << (v == true ? "true" : "false"); },
-      [&convert](int v) { convert << v << 'i'; },
-      [&convert](long long int v) { convert << v << 'i'; },
-      [&convert](double v) { convert  << std::fixed << v; },
-      [&convert](const std::string& v) { convert << escapeStringValue(v); },
-      [&convert](const char *v) { convert << escapeStringValue(std::string(v)); },
-      }, field.second);
-
-    fields += convert.str();
+      [&fields](bool v) { fields += (v == true ? "true" : "false"); },
+      [&fields](int v) { fields += std::to_string(v) + 'i'; },
+      [&fields](long long int v) { fields += std::to_string(v) + 'i'; },
+      [&fields](double v) {
+          char s[128];
+          sprintf(s, "%.*f", floatsPrecision, v);
+          fields += std::string(s);
+        },
+      [&fields](const std::string& v) { fields += escapeStringValue(v); },
+      [&fields](const char *v) { fields += escapeStringValue(std::string(v)); },
+    }, field.second);
   }
 
   return fields;
