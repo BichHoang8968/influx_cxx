@@ -37,11 +37,11 @@ project_build:
   script:
     - echo "Building RPM ....."
     - docker build -t $IMAGE_TAG
-                   --build-arg proxy=${proxy}
-                   --build-arg no_proxy=${no_proxy}
-                   --build-arg ACCESS_TOKEN=${ACCESS_TOKEN}
+                   --build-arg proxy=$PROXY
+                   --build-arg no_proxy=$NO_PROXY
+                   --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
                    --build-arg DIST=${DIST}
-                   --build-arg RELEASE_VERSION=${INFLUXDB_CXX_RELEASE_VERSION}
+                   --build-arg RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
                    -f $DOCKERFILE .
     # get rpm file from docker image
     - mkdir -p $RPM_DIR
