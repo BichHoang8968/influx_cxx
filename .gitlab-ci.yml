@@ -72,6 +72,6 @@ project_publish:
     - echo "Publishing ....."
     # influxdb-cxx
     - eval "$curl_command $RPM_DIR/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$DIST.x86_64.rpm
-                          $package_uri/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$DIST.x86_64.rpm"
+                          $package_uri/$CI_PIPELINE_ID-influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$DIST.x86_64.rpm"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
