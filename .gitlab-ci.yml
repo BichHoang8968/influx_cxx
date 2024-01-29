@@ -11,11 +11,10 @@ variables:
   PROXY: "http://proxy.toshiba.co.jp:8080"
   NO_PROXY: "127.0.0.1,tccloud2.toshiba.co.jp,localhost"
   ACCESS_TOKEN: "J-CyStgYPMWeTFSY_Ubs"
-  URI_HOST: "tccloud2.toshiba.co.jp/swc"
   INFLUXDB_CXX_PROJECT_ID: "728"
-  RPM_DIR: "cxx_rpm"
-  DIST: "rhel8"
-  INFLUXDB_CXX_PACKAGE: "rpm_RL8"
+  RPM_ARTIFACT_DIR: "cxx_rpm"
+  DEBIAN_ARTIFACT_DIR: "cxx_debian"
+  RPM_DISTRIBUTION_TYPE: "rhel8"
   INFLUXDB_CXX_PACKAGE_VERSION: "0.0.1"
   INFLUXDB_CXX_RELEASE_VERSION: "0.0.1"
 
@@ -40,21 +39,21 @@ project_build:
                    --build-arg proxy=$PROXY
                    --build-arg no_proxy=$NO_PROXY
                    --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
-                   --build-arg DIST=${DIST}
-                   --build-arg RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
+                   --build-arg RPM_DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE}
+                   --build-arg INFLUXDB_CXX_RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
                    -f $DOCKERFILE .
     # get rpm file from docker image
-    - mkdir -p $RPM_DIR
+    - mkdir -p $RPM_ARTIFACT_DIR
     - docker run -d --name test $IMAGE_TAG /usr/sbin/init
-    - docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $RPM_DIR
+    - docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $RPM_ARTIFACT_DIR
     # clean-up: delete docker image
     - docker rm $(docker stop test)
     - docker rmi $IMAGE_TAG
-    - cp $RPM_DIR/x86_64/* $RPM_DIR
-    - rm -rf $RPM_DIR/x86_64/
+    - cp $RPM_ARTIFACT_DIR/x86_64/* $RPM_ARTIFACT_DIR
+    - rm -rf $RPM_ARTIFACT_DIR/x86_64/
   artifacts:
     paths:
-      - $RPM_DIR
+      - $RPM_ARTIFACT_DIR
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
@@ -67,11 +66,11 @@ project_publish:
     - apt-get update -qq && apt-get install -y -qq curl
   variables:
     curl_command: "curl --header \"PRIVATE-TOKEN: $ACCESS_TOKEN\" --insecure --upload-file"
-    package_uri: "https://$URI_HOST/gitlab/api/v4/projects/$INFLUXDB_CXX_PROJECT_ID/packages/generic/$INFLUXDB_CXX_PACKAGE/$INFLUXDB_CXX_PACKAGE_VERSION"
+    package_uri: "https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/$INFLUXDB_CXX_PROJECT_ID/packages/generic/rpm_$RPM_DISTRIBUTION_TYPE/$INFLUXDB_CXX_PACKAGE_VERSION"
   script:
     - echo "Publishing ....."
     # influxdb-cxx
-    - eval "$curl_command $RPM_DIR/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$DIST.x86_64.rpm
-                          $package_uri/$CI_PIPELINE_ID-influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$DIST.x86_64.rpm"
+    - eval "$curl_command $RPM_ARTIFACT_DIR/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$RPM_DISTRIBUTION_TYPE.x86_64.rpm
+                          $package_uri/$CI_PIPELINE_ID-influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$RPM_DISTRIBUTION_TYPE.x86_64.rpm"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'

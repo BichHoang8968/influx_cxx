@@ -10,8 +10,8 @@ ENV https_proxy ${proxy}
 
 ENV no_proxy ${no_proxy}
 
-ARG DIST
-ARG RELEASE_VERSION
+ARG RPM_DISTRIBUTION_TYPE
+ARG INFLUXDB_CXX_RELEASE_VERSION
 
 # dnf config
 RUN echo $dnf_proxy >> /etc/dnf/dnf.conf
@@ -29,21 +29,21 @@ RUN echo "user1 ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Transfer files
 WORKDIR /home/user1
-RUN mkdir -p /home/user1/influxdb-cxx-${RELEASE_VERSION}
-COPY ./ /home/user1/influxdb-cxx-${RELEASE_VERSION}
-RUN cp /home/user1/influxdb-cxx-${RELEASE_VERSION}/influxdb-cxx.spec .
-RUN rm -rf /home/user1/influxdb-cxx-${RELEASE_VERSION}/.git \
-           /home/user1/influxdb-cxx-${RELEASE_VERSION}/create_rpm_binary.sh
+RUN mkdir -p /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+COPY ./ /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+RUN cp /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/influxdb-cxx.spec .
+RUN rm -rf /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/.git \
+           /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/create_rpm_binary.sh
 
 # Change permission
-RUN chown user1:user1 -R /home/user1/influxdb-cxx-${RELEASE_VERSION}
+RUN chown user1:user1 -R /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
 
 USER user1
 WORKDIR /home/user1
 
 # Build influxdb-cxx
-RUN tar cvjf influxdb-cxx.tar.bz2 influxdb-cxx-${RELEASE_VERSION}
-RUN rpmbuild -ba -D "_sourcedir $(pwd)" -D "dist ${DIST}" -D "influxdbcxx_release_version ${RELEASE_VERSION}" -D 'debug_package %{nil}' influxdb-cxx.spec
+RUN tar cvjf influxdb-cxx.tar.bz2 influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+RUN rpmbuild -ba -D "_sourcedir $(pwd)" -D "dist ${RPM_DISTRIBUTION_TYPE}" -D "influxdbcxx_release_version ${INFLUXDB_CXX_RELEASE_VERSION}" -D 'debug_package %{nil}' influxdb-cxx.spec
 
 # unset proxy
 ENV http_proxy=
