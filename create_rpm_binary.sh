@@ -105,4 +105,4 @@ else
 fi
 
 # Clean
-# docker rmi $IMAGE_TAG
+docker rmi $IMAGE_TAG
