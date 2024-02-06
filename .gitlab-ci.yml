@@ -9,11 +9,9 @@ default:
 # Global variable (can configure outside in gitlab web)
 variables:
   PROXY: "http://proxy.toshiba.co.jp:8080"
-  NO_PROXY: "127.0.0.1,tccloud2.toshiba.co.jp,localhost"
+  NO_PROXY: "127.0.0.1,tccloud2.toshiba.co.jp,localhost,docker"
   ACCESS_TOKEN: "J-CyStgYPMWeTFSY_Ubs"
-  INFLUXDB_CXX_PROJECT_ID: "728"
   RPM_ARTIFACT_DIR: "cxx_rpm"
-  DEBIAN_ARTIFACT_DIR: "cxx_debian"
   RPM_DISTRIBUTION_TYPE: "rhel8"
   INFLUXDB_CXX_PACKAGE_VERSION: "0.0.1"
   INFLUXDB_CXX_RELEASE_VERSION: "0.0.1"
@@ -27,8 +25,8 @@ project_build:
     IMAGE_TAG: "cxx_build"
     DOCKERFILE: "Dockerfile_rpm"
   before_script:
-    - export http_proxy=http://proxy.toshiba.co.jp:8080 && export https_proxy=http://proxy.toshiba.co.jp:8080
-    - export no_proxy=127.0.0.1,localhost,docker
+    - export http_proxy=$PROXY && export https_proxy=$PROXY
+    - export no_proxy=$NO_PROXY
     # handle if the previous pipeline error
     - docker rm $(docker stop test) || true
     - docker rmi $IMAGE_TAG || true
@@ -39,7 +37,7 @@ project_build:
                    --build-arg proxy=$PROXY
                    --build-arg no_proxy=$NO_PROXY
                    --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
-                   --build-arg RPM_DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE}
+                   --build-arg DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE}
                    --build-arg INFLUXDB_CXX_RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
                    -f $DOCKERFILE .
     # get rpm file from docker image
@@ -61,12 +59,12 @@ project_build:
 project_publish:
   stage: publish
   before_script:
-    - export http_proxy=http://proxy.toshiba.co.jp:8080 && export https_proxy=http://proxy.toshiba.co.jp:8080
-    - export no_proxy=127.0.0.1,localhost,docker
+    - export http_proxy=$PROXY && export https_proxy=$PROXY
+    - export no_proxy=$NO_PROXY
     - apt-get update -qq && apt-get install -y -qq curl
   variables:
     curl_command: "curl --header \"PRIVATE-TOKEN: $ACCESS_TOKEN\" --insecure --upload-file"
-    package_uri: "https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/$INFLUXDB_CXX_PROJECT_ID/packages/generic/rpm_$RPM_DISTRIBUTION_TYPE/$INFLUXDB_CXX_PACKAGE_VERSION"
+    package_uri: "https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/$CI_PROJECT_ID/packages/generic/rpm_$RPM_DISTRIBUTION_TYPE/$INFLUXDB_CXX_PACKAGE_VERSION"
   script:
     - echo "Publishing ....."
     # influxdb-cxx
