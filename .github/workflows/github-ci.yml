@@ -1,0 +1,84 @@
+name: Create RPM Release
+
+on:
+  workflow_dispatch:
+
+env:
+    ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    RPM_ARTIFACT_DIR: "cxx_rpm"
+    RPM_DISTRIBUTION_TYPE: "rhel8"
+    INFLUXDB_CXX_PACKAGE_VERSION: "0.0.1"
+    INFLUXDB_CXX_RELEASE_VERSION: "0.0.1"
+    IMAGE_TAG: "cxx_build"
+    DOCKERFILE: "Dockerfile_rpm"
+
+jobs:
+  project_build:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:24.0.5
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Before scripts
+      run: |
+        apk add wget
+        docker rm $(docker stop test) || true
+        docker rmi $IMAGE_TAG || true
+        echo "y" | docker system prune
+
+    - name: Build RPM
+      run: |
+        echo "Building RPM ....."
+        docker build -t $IMAGE_TAG \
+          --build-arg DISTRIBUTION_TYPE=$RPM_DISTRIBUTION_TYPE \
+          --build-arg INFLUXDB_CXX_RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION \
+          -f $DOCKERFILE .
+
+    - name: Copy RPM Artifact
+      run: |
+        mkdir -p $RPM_ARTIFACT_DIR
+        docker run -d --name test $IMAGE_TAG /usr/sbin/init
+        docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $RPM_ARTIFACT_DIR
+
+    - name: Clean up
+      run: |
+        docker rm $(docker stop test)
+        docker rmi $IMAGE_TAG
+        cp $RPM_ARTIFACT_DIR/x86_64/* $RPM_ARTIFACT_DIR
+        rm -rf $RPM_ARTIFACT_DIR/x86_64/
+
+    - name: Upload RPM Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: $RPM_ARTIFACT_DIR
+        path: $RPM_ARTIFACT_DIR
+
+  project_publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install curl
+      run: sudo apt-get update -qq && sudo apt-get install -y -qq curl
+
+    - name: Publish RPM
+      run: |
+        echo "Publishing ....."
+        influxdb_cxx_assets_uri="https://uploads.github.com/repos/${OWNER_GITHUB}/${INFLUXDB_CXX_PROJECT_GITHUB}/releases/${INFLUXDB_CXX_RELEASE_ID}/assets"
+        binary_dir="--data-binary \"@${RPM_ARTIFACT_DIR}\""
+        curl_command="curl -L \
+          -X POST \
+          -H \"Accept: application/vnd.github+json\" \
+          -H \"Authorization: Bearer ${ACCESS_TOKEN}\" \
+          -H \"X-GitHub-Api-Version: 2022-11-28\" \
+          -H \"Content-Type: application/octet-stream\" \
+          --insecure"
+        eval "$curl_command $influxdb_cxx_assets_uri?name=influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+          $binary_dir/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64-$CI_PIPELINE_ID.rpm"

@@ -37,7 +37,7 @@ project_build:
                    --build-arg proxy=$PROXY
                    --build-arg no_proxy=$NO_PROXY
                    --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
-                   --build-arg DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE}
+                   --build-arg DISTRIBUTION_TYPE=$RPM_DISTRIBUTION_TYPE
                    --build-arg INFLUXDB_CXX_RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
                    -f $DOCKERFILE .
     # get rpm file from docker image
