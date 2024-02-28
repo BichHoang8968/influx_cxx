@@ -24,9 +24,9 @@ RUN echo "user1 ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 WORKDIR /home/user1
 RUN mkdir -p /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
 COPY ./ /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
-RUN cp /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/influxdb-cxx.spec .
+RUN cp /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/docker/influxdb-cxx.spec .
 RUN rm -rf /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/.git \
-           /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/create_rpm_binary.sh
+           /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/docker/create_rpm_binary.sh
 
 # Change permission
 RUN chown user1:user1 -R /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}

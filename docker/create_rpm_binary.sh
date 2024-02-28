@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env_rpmbuild.conf
+source docker/env_rpmbuild.conf
 set -eE
 
 # create rpm on container environment
@@ -12,14 +12,14 @@ then
                  --build-arg ACCESS_TOKEN=${ACCESS_TOKEN} \
                  --build-arg DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE} \
                  --build-arg INFLUXDB_CXX_RELEASE_VERSION=${INFLUXDB_CXX_RELEASE_VERSION} \
-                 -f $DOCKERFILE .
+                 -f docker/$DOCKERFILE .
 else
     docker build -t $IMAGE_TAG \
                  --build-arg proxy=${proxy} \
                  --build-arg no_proxy=${no_proxy} \
                  --build-arg DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE} \
                  --build-arg INFLUXDB_CXX_RELEASE_VERSION=${INFLUXDB_CXX_RELEASE_VERSION} \
-                 -f $DOCKERFILE .
+                 -f docker/$DOCKERFILE .
 fi
 
 # copy binary to outside

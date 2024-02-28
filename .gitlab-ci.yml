@@ -39,7 +39,7 @@ project_build:
                    --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
                    --build-arg DISTRIBUTION_TYPE=$RPM_DISTRIBUTION_TYPE
                    --build-arg INFLUXDB_CXX_RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
-                   -f $DOCKERFILE .
+                   -f docker/$DOCKERFILE .
     # get rpm file from docker image
     - mkdir -p $RPM_ARTIFACT_DIR
     - docker run -d --name test $IMAGE_TAG /usr/sbin/init
