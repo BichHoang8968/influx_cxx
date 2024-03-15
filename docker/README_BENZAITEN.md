@@ -5,6 +5,7 @@ This directory contains the source code to create the influxdb-cxx rpm packages.
 
 Environment for creating rpm of influxdb-cxx
 =====================================
+The description below is used in the specific Linux distribution RockyLinux8.
 1. Docker
 	- Install Docker
 		```sh
@@ -63,6 +64,7 @@ Creating influxdb-cxx rpm packages
 		```sh
 		location=gitlab 					# Fill in <gitlab> or <github>. In this project, please use <gitlab>
 		ACCESS_TOKEN=						# Fill in the Access Token for authentication purposes to publish rpm packages to Package Registry
+		API_V4_URL=								# Fill in API v4 URL of this repo. In this project please use <https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4>
 		INFLUXDB_CXX_PROJECT_ID=			# Fill in the ID of the influxdb-cxx project.		
 		RPM_DISTRIBUTION_TYPE="rhel8"		# Distribution version of RedHat that the PGSpider rpm packages supports.
 		INFLUXDB_CXX_PACKAGE_VERSION=0.0.1	# Base version of influxdb-cxx package registry
@@ -90,11 +92,11 @@ Usage of Run CI/CD pipeline
 	```sh
 	Menu TaskBar -> Build -> Pipelines
 	```
-2. Click `Run Pipeline` button
-![Alt text](images/pipeline_screen.PNG)
+2. Click `Run Pipeline` button  
+![Alt text](images/BENZAITEN/pipeline_screen.PNG)
 3. Choose `Branch` or `Tag` name
 4. Provide `Access Token` through `Variabes`
 	- Input variable key: ACCESS_TOKEN
 	- Input variable value: Your access token
 5. Click `Run Pipeline` button  
-![Alt text](images/run_pipeline.PNG)
+![Alt text](images/BENZAITEN/run_pipeline.PNG)

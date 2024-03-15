@@ -35,7 +35,7 @@ rm -f $RPM_ARTIFACT_DIR/*-debuginfo-*.rpm
 if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
 then
     curl_command="curl --header \"PRIVATE-TOKEN: ${ACCESS_TOKEN}\" --insecure --upload-file"
-    influxdb_cxx_package_uri="https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/${INFLUXDB_CXX_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${INFLUXDB_CXX_PACKAGE_VERSION}"
+    influxdb_cxx_package_uri="$API_V4_URL/projects/${INFLUXDB_CXX_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${INFLUXDB_CXX_PACKAGE_VERSION}"
 
     # influxdb-cxx
     eval "$curl_command ${RPM_ARTIFACT_DIR}/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
@@ -47,6 +47,8 @@ else
                             -H \"Authorization: Bearer ${ACCESS_TOKEN}\" \
                             -H \"X-GitHub-Api-Version: 2022-11-28\" \
                             -H \"Content-Type: application/octet-stream\" \
+                            --retry 20 \
+                            --retry-max-time 120 \
                             --insecure"
     influxdb_cxx_assets_uri="https://uploads.github.com/repos/${OWNER_GITHUB}/${INFLUXDB_CXX_PROJECT_GITHUB}/releases/${INFLUXDB_CXX_RELEASE_ID}/assets"
     binary_dir="--data-binary \"@${RPM_ARTIFACT_DIR}\""
