@@ -8,9 +8,6 @@ default:
 
 # Global variable (can configure outside in gitlab web)
 variables:
-  PROXY: "http://proxy.toshiba.co.jp:8080"
-  NO_PROXY: "127.0.0.1,tccloud2.toshiba.co.jp,localhost,docker"
-  ACCESS_TOKEN: "J-CyStgYPMWeTFSY_Ubs"
   RPM_ARTIFACT_DIR: "cxx_rpm"
   RPM_DISTRIBUTION_TYPE: "rhel8"
   INFLUXDB_CXX_PACKAGE_VERSION: "0.0.1"
