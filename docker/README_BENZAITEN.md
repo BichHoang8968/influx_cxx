@@ -1,7 +1,9 @@
 Usage of creating influxdb-cxx RPM packages
 =====================================
 
-This directory contains the source code to create the influxdb-cxx rpm packages.
+This document is about how to create and publish rpm packages of influxdb-cxx to Benzaiten. 
+- It provided a tools to create InfluxDB CXX Client RPMs, [refer](#creating-influxdb-cxx-rpm-packages).
+- Additionally, we also provide Gitlab CI/CD pipeline for creating influxdb-cxx RPM packages, [refer](#usage-of-run-cicd-pipeline).
 
 Environment for creating rpm of influxdb-cxx
 =====================================
@@ -33,16 +35,7 @@ The description below is used in the specific Linux distribution RockyLinux8.
 		sudo systemctl daemon-reload
 		sudo systemctl restart docker
 		```
-2. rpm Tools
-	- rpmdevtools
-		```sh
-		sudo yum install -y rpmdevtools
-		```
-	- rpm-build
-		```sh
-		sudo yum install -y gcc gcc-c++ make automake autoconf rpm-build
-		```
-3. Get the required files  
+2. Get the required files  
 	```sh
 	git clone https://tccloud2.toshiba.co.jp/swc/gitlab/db/influxdb-cxx.git
 	```
@@ -50,11 +43,11 @@ The description below is used in the specific Linux distribution RockyLinux8.
 Creating influxdb-cxx rpm packages
 =====================================
 1. File used here
-	- docker/influxdb-cxx.spec
-	- docker/env_rpmbuild.conf
-	- docker/Dockerfile_rpm
-	- docker/create_rpm_binary.sh
-2. Configure `docker/env_rpmbuild.conf` file
+	- rpm/influxdb-cxx.spec
+	- rpm/env_rpmbuild.conf
+	- rpm/Dockerfile_rpm
+	- rpm/create_rpm_binary_with_PGSpider.sh
+2. Configure `rpm/env_rpmbuild.conf` file
 	- Configure proxy
 		```sh
 		proxy=http://username:password@proxy:port
@@ -65,15 +58,15 @@ Creating influxdb-cxx rpm packages
 		location=gitlab 					# Fill in <gitlab> or <github>. In this project, please use <gitlab>
 		ACCESS_TOKEN=						# Fill in the Access Token for authentication purposes to publish rpm packages to Package Registry
 		API_V4_URL=								# Fill in API v4 URL of this repo. In this project please use <https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4>
+		PACKAGE_RELEASE_VERSION=1			# The number of times this version of the influxdb-cxx has been packaged.
 		INFLUXDB_CXX_PROJECT_ID=			# Fill in the ID of the influxdb-cxx project.		
-		RPM_DISTRIBUTION_TYPE="rhel8"		# Distribution version of RedHat that the PGSpider rpm packages supports.
 		INFLUXDB_CXX_PACKAGE_VERSION=0.0.1	# Base version of influxdb-cxx package registry
 		INFLUXDB_CXX_RELEASE_VERSION=0.0.1	# Version of influxdb-cxx rpm package
 		```
 3. Build execution
 	```sh
-	chmod +x docker/create_rpm_binary.sh
-	./docker/create_rpm_binary.sh
+	chmod +x rpm/create_rpm_binary_with_PGSpider.sh
+	./rpm/create_rpm_binary_with_PGSpider.sh
 	```
 4. Confirmation after finishing executing the script
 	- Terminal displays a success message. 
@@ -82,7 +75,7 @@ Creating influxdb-cxx rpm packages
 		...
 		{"message":"201 Created"}
 		```
-	- rpm Packages are stored on the Package Registry of its repository
+	- RPM Packages are stored on the Package Registry of its repository
 		```sh
 		Menu TaskBar -> Deploy -> Package Registry
 		```
@@ -95,7 +88,7 @@ Usage of Run CI/CD pipeline
 2. Click `Run Pipeline` button  
 ![Alt text](images/BENZAITEN/pipeline_screen.PNG)
 3. Choose `Branch` or `Tag` name
-4. Provide `Access Token` through `Variabes`
+4. Provide `Access Token` through `Variables`
 	- Input variable key: ACCESS_TOKEN
 	- Input variable value: Your access token
 5. Click `Run Pipeline` button  

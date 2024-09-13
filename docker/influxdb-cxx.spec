@@ -3,7 +3,7 @@
 Summary:	InfluxDB C++ client library
 Name:		%{sname}
 Version:	%{influxdbcxx_release_version}
-Release:	%{?dist}
+Release:	%{?package_release_version}.%{?dist}
 License:	MIT
 Source0:	influxdb-cxx.tar.bz2
 URL:		https://github.com/pgspider/influxdb-cxx

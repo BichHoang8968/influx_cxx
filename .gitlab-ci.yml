@@ -9,9 +9,9 @@ default:
 # Global variable (can configure outside in gitlab web)
 variables:
   RPM_ARTIFACT_DIR: "cxx_rpm"
-  RPM_DISTRIBUTION_TYPE: "rhel8"
   INFLUXDB_CXX_PACKAGE_VERSION: "0.0.1"
   INFLUXDB_CXX_RELEASE_VERSION: "0.0.1"
+  PACKAGE_RELEASE_VERSION: "1"
 
 project_build:
   stage: build
@@ -28,27 +28,28 @@ project_build:
     - docker rm $(docker stop test) || true
     - docker rmi $IMAGE_TAG || true
     - echo "y" | docker system prune
+    - echo "y" | docker volume prune
   script:
     - echo "Building RPM ....."
     - docker build -t $IMAGE_TAG
                    --build-arg proxy=$PROXY
                    --build-arg no_proxy=$NO_PROXY
                    --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
-                   --build-arg DISTRIBUTION_TYPE=$RPM_DISTRIBUTION_TYPE
+                   --build-arg PACKAGE_RELEASE_VERSION=$PACKAGE_RELEASE_VERSION
                    --build-arg INFLUXDB_CXX_RELEASE_VERSION=$INFLUXDB_CXX_RELEASE_VERSION
-                   -f docker/$DOCKERFILE .
+                   -f rpm/$DOCKERFILE .
     # get rpm file from docker image
-    - mkdir -p $RPM_ARTIFACT_DIR
+    - mkdir -p $ARTIFACT_DIR
     - docker run -d --name test $IMAGE_TAG /usr/sbin/init
-    - docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $RPM_ARTIFACT_DIR
+    - docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $ARTIFACT_DIR
     # clean-up: delete docker image
     - docker rm $(docker stop test)
     - docker rmi $IMAGE_TAG
-    - cp $RPM_ARTIFACT_DIR/x86_64/* $RPM_ARTIFACT_DIR
-    - rm -rf $RPM_ARTIFACT_DIR/x86_64/
+    - cp $ARTIFACT_DIR/x86_64/* $ARTIFACT_DIR
+    - rm -rf $ARTIFACT_DIR/x86_64/
   artifacts:
     paths:
-      - $RPM_ARTIFACT_DIR
+      - $ARTIFACT_DIR
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
@@ -61,11 +62,11 @@ project_publish:
     - apt-get update -qq && apt-get install -y -qq curl
   variables:
     curl_command: "curl --header \"PRIVATE-TOKEN: $ACCESS_TOKEN\" --insecure --upload-file"
-    package_uri: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/rpm_$RPM_DISTRIBUTION_TYPE/$INFLUXDB_CXX_PACKAGE_VERSION"
+    package_uri: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/rpm_rhel8/$INFLUXDB_CXX_PACKAGE_VERSION"
   script:
     - echo "Publishing ....."
     # influxdb-cxx
-    - eval "$curl_command $RPM_ARTIFACT_DIR/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$RPM_DISTRIBUTION_TYPE.x86_64.rpm
-                          $package_uri/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$RPM_DISTRIBUTION_TYPE.x86_64-$CI_PIPELINE_ID.rpm"
+    - eval "$curl_command $RPM_ARTIFACT_DIR/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
+                          $package_uri/influxdb-cxx-$INFLUXDB_CXX_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
