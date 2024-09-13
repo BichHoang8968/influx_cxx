@@ -59,7 +59,7 @@ then
     influxdb_cxx_package_uri="$API_V4_URL/projects/${INFLUXDB_CXX_PROJECT_ID}/packages/generic/rpm_rhel8/${INFLUXDB_CXX_PACKAGE_VERSION}"
 
     # influxdb-cxx
-    eval "$curl_command ${RPM_ARTIFACT_DIR}/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${PACKAGE_RELEASE_VERSION}.rhel8.x86_64.rpm \
+    eval "$curl_command ${ARTIFACT_DIR}/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${PACKAGE_RELEASE_VERSION}.rhel8.x86_64.rpm \
                         $influxdb_cxx_package_uri/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${PACKAGE_RELEASE_VERSION}.rhel8.x86_64.rpm"
 else
     curl_command="curl -L \
@@ -72,7 +72,7 @@ else
                             --retry-max-time 120 \
                             --insecure"
     influxdb_cxx_assets_uri="https://uploads.github.com/repos/${OWNER_GITHUB}/${INFLUXDB_CXX_PROJECT_GITHUB}/releases/${INFLUXDB_CXX_RELEASE_ID}/assets"
-    binary_dir="--data-binary \"@${RPM_ARTIFACT_DIR}\""
+    binary_dir="--data-binary \"@${ARTIFACT_DIR}\""
 
     # influxdb-cxx
     eval "$curl_command $influxdb_cxx_assets_uri?name=influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}-${PACKAGE_RELEASE_VERSION}.rhel8.x86_64.rpm \

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  RPM_ARTIFACT_DIR: "cxx_rpm"                    # Directory name of Artifact to contain rpm files temporary. Default is "cxx_rpm".
+  ARTIFACT_DIR: "cxx_rpm"                    # Directory name of Artifact to contain rpm files temporary. Default is "cxx_rpm".
   INFLUXDB_CXX_RELEASE_VERSION: "0.0.1"
 
 jobs:
@@ -37,22 +37,22 @@ jobs:
 
     - name: Copy RPM Artifact
       run: |
-        mkdir -p ${{ env.RPM_ARTIFACT_DIR }}
+        mkdir -p ${{ env.ARTIFACT_DIR }}
         docker run -d --name test $IMAGE_TAG /usr/sbin/init
-        docker cp test:/home/user1/rpmbuild/RPMS/x86_64 ${{ env.RPM_ARTIFACT_DIR }}
+        docker cp test:/home/user1/rpmbuild/RPMS/x86_64 ${{ env.ARTIFACT_DIR }}
 
     - name: Clean up
       run: |
         docker rm $(docker stop test)
         docker rmi $IMAGE_TAG
-        cp ${{ env.RPM_ARTIFACT_DIR }}/x86_64/* ${{ env.RPM_ARTIFACT_DIR }}
-        rm -rf ${{ env.RPM_ARTIFACT_DIR }}/x86_64/
+        cp ${{ env.ARTIFACT_DIR }}/x86_64/* ${{ env.ARTIFACT_DIR }}
+        rm -rf ${{ env.ARTIFACT_DIR }}/x86_64/
 
     - name: Upload RPM Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ env.RPM_ARTIFACT_DIR }}
-        path: '${{ github.workspace }}/${{ env.RPM_ARTIFACT_DIR }}'
+        name: ${{ env.ARTIFACT_DIR }}
+        path: '${{ github.workspace }}/${{ env.ARTIFACT_DIR }}'
 
   # Job 2: Create release, publish source code and rpm files
   project_publish:
@@ -83,7 +83,7 @@ jobs:
     - name: Download RPM Artifact
       uses: actions/download-artifact@v2
       with:
-        name: ${{ env.RPM_ARTIFACT_DIR }}
+        name: ${{ env.ARTIFACT_DIR }}
 
     # Upload rpm files to release that is created in previous step
     - name: Upload rpm
