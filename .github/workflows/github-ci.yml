@@ -34,6 +34,7 @@ jobs:
         echo "Building RPM ....."
         docker build -t $IMAGE_TAG \
           --build-arg INFLUXDB_CXX_RELEASE_VERSION=${{ env.INFLUXDB_CXX_RELEASE_VERSION }} \
+          --build-arg PACKAGE_RELEASE_VERSION=${{ env.PACKAGE_RELEASE_VERSION }} \
           -f rpm/$DOCKERFILE .
 
     - name: Copy RPM Artifact
