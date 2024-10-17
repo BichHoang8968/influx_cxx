@@ -1,0 +1,99 @@
+name: Create RPM Release
+
+on:
+  workflow_dispatch:
+
+env:
+  ARTIFACT_DIR: "cxx_rpm"                    # Directory name of Artifact to contain rpm files temporary. Default is "cxx_rpm".
+  INFLUXDB_CXX_RELEASE_VERSION: "0.0.1"
+  PACKAGE_RELEASE_VERSION: "1"
+
+jobs:
+  # Job 1: Build rpm files and upload them to Artifact
+  project_build:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:24.0.5
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+    env:
+      IMAGE_TAG: "cxx_build"
+      DOCKERFILE: "Dockerfile_rpm"
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Before scripts
+      run: |
+        apk add wget
+
+    - name: Build RPM
+      run: |
+        echo "Building RPM ....."
+        docker build -t $IMAGE_TAG \
+          --build-arg INFLUXDB_CXX_RELEASE_VERSION=${{ env.INFLUXDB_CXX_RELEASE_VERSION }} \
+          --build-arg PACKAGE_RELEASE_VERSION=${{ env.PACKAGE_RELEASE_VERSION }} \
+          -f docker/$DOCKERFILE .
+
+    - name: Copy RPM Artifact
+      run: |
+        mkdir -p ${{ env.ARTIFACT_DIR }}
+        docker run -d --name test $IMAGE_TAG /usr/sbin/init
+        docker cp test:/home/user1/rpmbuild/RPMS/x86_64 ${{ env.ARTIFACT_DIR }}
+
+    - name: Clean up
+      run: |
+        docker rm $(docker stop test)
+        docker rmi $IMAGE_TAG
+        cp ${{ env.ARTIFACT_DIR }}/x86_64/* ${{ env.ARTIFACT_DIR }}
+        rm -rf ${{ env.ARTIFACT_DIR }}/x86_64/
+
+    - name: Upload RPM Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT_DIR }}
+        path: '${{ github.workspace }}/${{ env.ARTIFACT_DIR }}'
+
+  # Job 2: Create release, publish source code and rpm files
+  project_publish:
+    needs: project_build
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install curl
+      run: sudo apt-get update -qq && sudo apt-get install -y -qq curl
+
+    # Create release. After this step, source code is published.
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.INFLUXDB_CXX_RELEASE_VERSION }}
+        release_name: Release ${{ env.INFLUXDB_CXX_RELEASE_VERSION }}
+        draft: false
+        prerelease: false
+
+    # Download rpm files from Artifact
+    - name: Download RPM Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT_DIR }}
+
+    # Upload rpm files to release that is created in previous step
+    - name: Upload rpm
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./influxdb-cxx-${{ env.INFLUXDB_CXX_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
+        asset_name: influxdb-cxx-${{ env.INFLUXDB_CXX_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
+        asset_content_type: application/octet-stream
