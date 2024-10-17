@@ -1,0 +1,46 @@
+FROM rockylinux:8.8
+
+ARG proxy
+ARG no_proxy
+
+ENV http_proxy ${proxy}
+ENV https_proxy ${proxy}
+ENV no_proxy ${no_proxy}
+
+ARG PACKAGE_RELEASE_VERSION
+
+ARG INFLUXDB_CXX_RELEASE_VERSION
+
+# Install dependencies
+RUN dnf install -y sudo bzip2 rpm-build wget cmake gcc-c++
+RUN sudo -E dnf --enablerepo=devel install -y libcurl-devel openssl-devel
+
+# Create non-super user and put ROM files.
+# User on host will mapped to this user.
+RUN useradd -m user1
+RUN echo "user1:user1" | chpasswd
+RUN echo "user1 ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Transfer files
+WORKDIR /home/user1
+RUN mkdir -p /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+COPY ./ /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+RUN cp /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/rpm/influxdb-cxx.spec .
+RUN rm -rf /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/.git \
+           /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}/rpm/create_rpm_binary_with_PGSpider.sh
+
+# Change permission
+RUN chown user1:user1 -R /home/user1/influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+
+USER user1
+WORKDIR /home/user1
+
+# Build influxdb-cxx
+RUN tar cvjf influxdb-cxx.tar.bz2 influxdb-cxx-${INFLUXDB_CXX_RELEASE_VERSION}
+RUN rpmbuild -ba -D "_sourcedir $(pwd)" -D "dist rhel8" -D "influxdbcxx_release_version ${INFLUXDB_CXX_RELEASE_VERSION}" -D 'debug_package %{nil}' -D "package_release_version ${PACKAGE_RELEASE_VERSION}" influxdb-cxx.spec
+
+# unset proxy
+ENV http_proxy=
+ENV https_proxy=
+ENV no_proxy=
+RUN sudo sed -i "s/.*proxy=.*/proxy=/g" /etc/dnf/dnf.conf

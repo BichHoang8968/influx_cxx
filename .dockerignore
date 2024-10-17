@@ -1,0 +1,3 @@
+*.sh
+.gitlab-ci.yml
+cxx_rpm/
